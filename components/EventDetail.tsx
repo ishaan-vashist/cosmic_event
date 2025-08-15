@@ -6,6 +6,7 @@ interface EventDetailProps {
   orbitalData: NEO['orbital_data'] | null;
   loadingOrbitalData: boolean;
   onLoadOrbitalData: () => void;
+  orbitalError?: string | null;
 }
 
 export default function EventDetail({
@@ -13,6 +14,7 @@ export default function EventDetail({
   orbitalData,
   loadingOrbitalData,
   onLoadOrbitalData,
+  orbitalError,
 }: EventDetailProps) {
   return (
     <div className="space-y-6">
@@ -145,6 +147,17 @@ export default function EventDetail({
         {loadingOrbitalData ? (
           <div className="text-center py-4">
             <p>Loading orbital data...</p>
+          </div>
+        ) : orbitalError ? (
+          <div className="text-center py-4">
+            <p className="text-destructive">{orbitalError}</p>
+            <button
+              onClick={onLoadOrbitalData}
+              className="mt-2 text-sm px-3 py-1 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+              disabled={loadingOrbitalData}
+            >
+              Try Again
+            </button>
           </div>
         ) : orbitalData ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2">

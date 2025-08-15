@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background glow -->
+  <defs>
+    <radialGradient id="asteroidGlow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="asteroidGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#4a4a4a" />
+      <stop offset="70%" stop-color="#2a2a2a" />
+      <stop offset="100%" stop-color="#1a1a1a" />
+    </radialGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  
+  <!-- Outer glow -->
+  <circle cx="250" cy="250" r="220" fill="url(#asteroidGlow)" />
+  
+  <!-- Blue glow ring -->
+  <circle cx="250" cy="250" r="200" fill="none" stroke="#3b82f6" stroke-width="4" stroke-opacity="0.4" filter="url(#glow)" />
+  
+  <!-- Main asteroid body with irregular shape -->
+  <path d="M250,80 
+           C290,60 340,90 380,130 
+           C420,170 430,220 410,270 
+           C390,320 350,370 300,390 
+           C250,410 200,400 160,370 
+           C120,340 90,290 80,240 
+           C70,190 80,140 110,100 
+           C140,60 210,100 250,80 Z" 
+        fill="url(#asteroidGradient)" />
+  
+  <!-- Craters -->
+  <circle cx="180" cy="150" r="25" fill="#1a1a1a" opacity="0.8" />
+  <circle cx="300" cy="200" r="35" fill="#1a1a1a" opacity="0.9" />
+  <circle cx="220" cy="300" r="30" fill="#1a1a1a" opacity="0.8" />
+  <circle cx="150" cy="250" r="20" fill="#1a1a1a" opacity="0.8" />
+  <circle cx="330" cy="280" r="15" fill="#1a1a1a" opacity="0.7" />
+  <circle cx="270" cy="150" r="18" fill="#1a1a1a" opacity="0.7" />
+  
+  <!-- Surface details - highlights -->
+  <path d="M150,120 L170,140 L160,160 L140,150 Z" fill="#5a5a5a" opacity="0.4" />
+  <path d="M280,150 L310,160 L300,190 L270,180 Z" fill="#5a5a5a" opacity="0.3" />
+  <path d="M200,250 L230,260 L220,290 L190,280 Z" fill="#5a5a5a" opacity="0.5" />
+  <path d="M310,300 L330,310 L320,330 L300,320 Z" fill="#5a5a5a" opacity="0.4" />
+  
+  <!-- Surface details - shadows -->
+  <path d="M190,170 L210,180 L200,200 L180,190 Z" fill="#1a1a1a" opacity="0.6" />
+  <path d="M320,170 L340,180 L330,200 L310,190 Z" fill="#1a1a1a" opacity="0.5" />
+  <path d="M240,290 L260,300 L250,320 L230,310 Z" fill="#1a1a1a" opacity="0.7" />
+  
+  <!-- Subtle blue highlights to match theme -->
+  <circle cx="210" cy="180" r="5" fill="#3b82f6" opacity="0.3" />
+  <circle cx="320" cy="240" r="7" fill="#3b82f6" opacity="0.2" />
+  <circle cx="180" cy="280" r="4" fill="#3b82f6" opacity="0.3" />
+</svg>

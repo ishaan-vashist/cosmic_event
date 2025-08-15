@@ -252,6 +252,18 @@ export function useNeoFeed({
                 if (!b.nearestApproach?.epoch) return -1;
                 return b.nearestApproach.epoch - a.nearestApproach.epoch;
               });
+            } else if (sortOrder === "size_asc") {
+              existingGroup.neos.sort((a, b) => {
+                if (a.avgDiameterKm === null) return 1;
+                if (b.avgDiameterKm === null) return -1;
+                return a.avgDiameterKm - b.avgDiameterKm;
+              });
+            } else if (sortOrder === "size_desc") {
+              existingGroup.neos.sort((a, b) => {
+                if (a.avgDiameterKm === null) return 1;
+                if (b.avgDiameterKm === null) return -1;
+                return b.avgDiameterKm - a.avgDiameterKm;
+              });
             }
           } else {
             // Add new date group

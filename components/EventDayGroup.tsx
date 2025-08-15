@@ -1,22 +1,27 @@
 import { DayGroup } from "@/types/neo";
-import EventCard from "./EventCard";
+import { NEO } from "@/types/neo";
 import { formatDateForDisplay } from "@/lib/date";
+import EventCard from "./EventCard";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 interface EventDayGroupProps {
-  dayGroup: DayGroup;
+  dayGroup: { date: string; neos: NEO[]; count: number };
 }
 
 export default function EventDayGroup({ dayGroup }: EventDayGroupProps) {
   return (
-    <div>
-      <div className="flex items-center mb-3">
+    <div className="mb-8">
+      <div className="flex items-center mb-4">
         <h2 className="text-xl font-semibold">{formatDateForDisplay(dayGroup.date)}</h2>
-        <span className="ml-2 px-2 py-0.5 bg-secondary text-secondary-foreground text-sm rounded-full">
+        <Badge variant="secondary" className="ml-3">
           {dayGroup.count} {dayGroup.count === 1 ? "object" : "objects"}
-        </span>
+        </Badge>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <Separator className="mb-6" />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {dayGroup.neos.map((neo) => (
           <EventCard key={neo.id} neo={neo} />
         ))}

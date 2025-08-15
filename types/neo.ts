@@ -53,7 +53,7 @@ export interface DayGroup {
 /**
  * Sort options for NEO listing
  */
-export type SortOrder = "approach_asc" | "approach_desc";
+export type SortOrder = "approach_asc" | "approach_desc" | "size_asc" | "size_desc";
 
 /**
  * Parameters for NEO feed API

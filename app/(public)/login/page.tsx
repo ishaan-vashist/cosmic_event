@@ -19,7 +19,7 @@ export default function Login() {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        router.push("/");
+        router.push("/feed");
       }
     };
     
@@ -29,7 +29,7 @@ export default function Login() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event: AuthChangeEvent, session: Session | null) => {
         if (event === "SIGNED_IN" && session) {
-          router.push("/");
+          router.push("/feed");
         }
       }
     );
@@ -50,7 +50,7 @@ export default function Login() {
         supabaseClient={supabase}
         appearance={{ theme: ThemeSupa }}
         providers={[]}
-        redirectTo={`${window.location.origin}/`}
+        redirectTo={`${window.location.origin}/feed`}
       />
     </div>
   );

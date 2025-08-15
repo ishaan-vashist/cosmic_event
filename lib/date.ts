@@ -1,4 +1,4 @@
-import { format, addDays, parseISO, isValid } from "date-fns";
+import { format, addDays, parseISO, isValid, parse } from "date-fns";
 
 /**
  * Formats a date to YYYY-MM-DD format (UTC)
@@ -41,24 +41,38 @@ export function getDateRange(startDate: Date, endDate: Date): string[] {
 
 /**
  * Formats a datetime string for display (converts from UTC to local)
- * @param dateTimeStr - ISO datetime string
+ * @param dateTimeStr - ISO datetime string or NASA format string (YYYY-MMM-DD HH:mm)
  * @returns Formatted datetime string for display
  */
 export function formatDateTimeForDisplay(dateTimeStr: string | null): string {
   if (!dateTimeStr) return "Unknown";
   
   try {
-    const date = parseISO(dateTimeStr);
+    let date;
+    
+    // Check if the date is in NASA's format (YYYY-MMM-DD HH:MM)
+    if (dateTimeStr.match(/^\d{4}-[A-Za-z]{3}-\d{2} \d{2}:\d{2}$/)) {
+      date = parse(dateTimeStr, 'yyyy-MMM-dd HH:mm', new Date());
+    } 
+    // Check if it's just a date without time
+    else if (!dateTimeStr.includes('T') && !dateTimeStr.includes(' ')) {
+      date = parseISO(`${dateTimeStr}T00:00:00`);
+    }
+    // Otherwise try standard ISO format
+    else {
+      date = parseISO(dateTimeStr);
+    }
     
     if (!isValid(date)) {
-      return "Invalid Date";
+      console.warn(`Invalid date format received: ${dateTimeStr}`);
+      return "Unknown Date";
     }
     
     // Format with date and time
     return format(date, "MMM d, yyyy 'at' h:mm a");
   } catch (error) {
-    console.error("Error parsing date:", error);
-    return "Invalid Date";
+    console.error("Error parsing date:", error, dateTimeStr);
+    return "Unknown Date";
   }
 }
 

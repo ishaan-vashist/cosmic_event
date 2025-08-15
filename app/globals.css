@@ -2,6 +2,54 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animations for landing page */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@layer utilities {
+  .animate-twinkle-1 {
+    animation: twinkle 4s ease-in-out infinite;
+  }
+  
+  .animate-twinkle-2 {
+    animation: twinkle 6s ease-in-out infinite 1s;
+  }
+  
+  .animate-twinkle-3 {
+    animation: twinkle 8s ease-in-out infinite 2s;
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+  
+  .animate-fade-in-delay {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards 0.3s;
+  }
+  
+  .animate-fade-in-delay-200 {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-out forwards 0.6s;
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -73,4 +121,54 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Star background styles */
+.stars-sm,
+.stars-md,
+.stars-lg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.stars-sm::before,
+.stars-md::before,
+.stars-lg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(2px 2px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(2px 2px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(2px 2px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(2px 2px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(2px 2px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(2px 2px at calc(random() * 100%) calc(random() * 100%), white, transparent);
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  opacity: 0.3;
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+.stars-md::before {
+  background-image: radial-gradient(3px 3px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(3px 3px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(3px 3px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(3px 3px at calc(random() * 100%) calc(random() * 100%), white, transparent);
+  background-size: 300px 300px;
+  animation: twinkle 6s ease-in-out infinite 1s;
+}
+
+.stars-lg::before {
+  background-image: radial-gradient(4px 4px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(4px 4px at calc(random() * 100%) calc(random() * 100%), white, transparent),
+                    radial-gradient(4px 4px at calc(random() * 100%) calc(random() * 100%), white, transparent);
+  background-size: 400px 400px;
+  animation: twinkle 8s ease-in-out infinite 2s;
 }

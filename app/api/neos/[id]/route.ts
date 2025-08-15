@@ -29,6 +29,16 @@ export async function GET(
       );
     }
 
+    // Check if NASA API key is configured
+    const apiKey = process.env.NASA_API_KEY;
+    if (!apiKey) {
+      console.error("NASA_API_KEY is not defined in environment variables");
+      return NextResponse.json(
+        { error: "API configuration error", message: "NASA API key is not configured" },
+        { status: 500 }
+      );
+    }
+
     // Parse query parameters
     const { searchParams } = new URL(request.url);
     const orbital = searchParams.get("orbital") === "true";
@@ -78,14 +88,19 @@ export async function GET(
     // Handle NASA API specific errors
     const err = error as { status?: number; headers?: { get: (name: string) => string | null }; message?: string };
     
-    if (err.status === 401) {
+    if (err.message?.includes("NASA_API_KEY is not defined")) {
       return NextResponse.json(
-        { error: "NASA API key is invalid or missing" },
+        { error: "API configuration error", message: "NASA API key is not configured" },
+        { status: 500 }
+      );
+    } else if (err.status === 401) {
+      return NextResponse.json(
+        { error: "NASA API key is invalid" },
         { status: 401 }
       );
     } else if (err.status === 404) {
       return NextResponse.json(
-        { error: "Asteroid not found" },
+        { error: "Asteroid not found", id: params.id },
         { status: 404 }
       );
     } else if (err.status === 429) {
@@ -97,6 +112,14 @@ export async function GET(
         { status: 429 }
       );
     }
+    
+    // Log detailed error information
+    console.error("Detailed error info:", {
+      message: err.message,
+      status: err.status,
+      id: params.id,
+      orbital: request.url.includes("orbital=true")
+    });
     
     return NextResponse.json(
       { error: "Failed to fetch NEO detail", message: err.message || "Unknown error" },

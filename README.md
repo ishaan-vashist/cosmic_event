@@ -1,8 +1,8 @@
 # Cosmic Event Tracker
 
-A production-quality Next.js 14 application that tracks and displays NASA Near-Earth Objects (NEOs) with a modern, responsive UI.
+A production-quality Next.js 14 application that tracks and displays NASA Near-Earth Objects (NEOs) with a modern, responsive UI featuring a beautiful space-themed design.
 
-![Cosmic Event Tracker](https://via.placeholder.com/800x400?text=Cosmic+Event+Tracker)
+![Cosmic Event Tracker](https://via.placeholder.com/800x400?text=Cosmic+Event+Tracker+Space+Theme)
 
 ## Features
 
@@ -11,20 +11,25 @@ A production-quality Next.js 14 application that tracks and displays NASA Near-E
 - 📊 Group NEOs by date with detailed information
 - 🚀 View detailed information about each NEO including orbital data
 - 🔄 Load more functionality to see additional dates
-- 🌓 Dark/light mode support
+- 🌓 Dark mode space-themed design
 - 🔒 Authentication via Supabase
 - 📱 Fully responsive design
+- ✨ Interactive UI with animations and space-themed elements
+- 💾 User favorites and personalized feed
+- 🔔 Toast notifications for user actions
 
 ## Tech Stack
 
 - **Framework**: Next.js 14 with App Router
 - **Language**: TypeScript
-- **Styling**: TailwindCSS
-- **UI Components**: ShadCN/UI
+- **Styling**: TailwindCSS with custom animations
+- **UI Components**: ShadCN/UI with space-themed customizations
 - **Authentication**: Supabase Auth
 - **Data Validation**: Zod
 - **Date Handling**: date-fns
 - **Testing**: Vitest + React Testing Library
+- **Icons**: Lucide React
+- **Toast Notifications**: Custom toast implementation
 
 ## Getting Started
 
@@ -38,8 +43,8 @@ A production-quality Next.js 14 application that tracks and displays NASA Near-E
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/cosmic-event-tracker.git
-   cd cosmic-event-tracker
+   git clone https://github.com/ishaan-vashist/cosmic_event.git
+   cd cosmic_event
    ```
 
 2. Install dependencies:
@@ -93,10 +98,20 @@ The application uses the Backend-for-Frontend pattern with Next.js API routes to
 /app                  # Next.js App Router pages and layouts
   /(public)           # Public routes (login)
   /api                # API routes (BFF pattern)
+    /neos             # NEO API endpoints
   /event              # Event detail pages
+  /feed               # User feed page
 /components           # Reusable UI components
+  /ui                 # ShadCN UI components
 /hooks                # Custom React hooks
+  useNeoFeed.ts       # Hook for fetching NEO data
+  useRequireAuth.ts   # Authentication hook
 /lib                  # Utility functions and API clients
+  date.ts             # Date formatting utilities
+  nasa.ts             # NASA API client
+  supabase.ts         # Supabase client
+  utils.ts            # General utilities
+/public               # Static assets
 /types                # TypeScript type definitions
 /tests                # Unit and integration tests
 ```
@@ -164,6 +179,10 @@ npm run lint
 - Could add more detailed visualizations of NEO orbits
 - Potential for push notifications for hazardous NEOs
 - User preferences for default filters and sorts
+- Enhanced animations and interactive elements
+- Mobile app version using React Native
+- Social sharing features for interesting NEO discoveries
+- Advanced statistics and trend analysis for NEO data
 
 ## License
 

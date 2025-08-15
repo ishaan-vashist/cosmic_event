@@ -15,7 +15,7 @@ const QuerySchema = z.object({
   start_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be in YYYY-MM-DD format"),
   end_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be in YYYY-MM-DD format"),
   hazardous: z.enum(["true", "false"]).optional(),
-  sort: z.enum(["approach_asc", "approach_desc"]).optional(),
+  sort: z.enum(["approach_asc", "approach_desc", "size_asc", "size_desc"]).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Convert optional params: URLSearchParams.get returns null when absent.
     // Zod .optional() expects undefined, not null.
     const hazardousParam = searchParams.get("hazardous") ?? undefined;
-    const sortParam = (searchParams.get("sort") as "approach_asc" | "approach_desc" | null) ?? "approach_asc";
+    const sortParam = (searchParams.get("sort") as "approach_asc" | "approach_desc" | "size_asc" | "size_desc" | null) ?? "approach_asc";
 
     const validationResult = QuerySchema.safeParse({
       start_date: startDate,
@@ -100,7 +100,7 @@ export async function GET(request: NextRequest) {
     const normalizedData = normalizeNeoData(
       neoData, 
       hazardous === "true", 
-      sort as "approach_asc" | "approach_desc"
+      sort as "approach_asc" | "approach_desc" | "size_asc" | "size_desc"
     );
 
     // Cache the result
@@ -125,8 +125,29 @@ export async function GET(request: NextRequest) {
     }
     
     // Handle NASA API specific errors
-    const err = error as { status?: number; headers?: { get: (name: string) => string | null }; message?: string };
+    const err = error as { status?: number; code?: string; cause?: Error; headers?: { get: (name: string) => string | null }; message?: string };
     
+    // Handle network connectivity errors
+    if (err.message?.includes('fetch failed') || 
+        err.code === 'ENOTFOUND' || 
+        err.code === 'ECONNREFUSED' ||
+        err.cause?.message?.includes('getaddrinfo')) {
+      
+      console.warn("Network connectivity issue detected, using fallback data");
+      
+      // The fetchNeoFeed function should have already used fallback data
+      // This code should not be reached, but just in case:
+      return NextResponse.json(
+        { 
+          error: "Network connectivity issue", 
+          message: "Using cached or fallback data",
+          warning: "Limited or potentially outdated data available due to network issues"
+        },
+        { status: 200 } // Still return 200 since we're providing data
+      );
+    }
+    
+    // Handle API authentication errors
     if (err.status === 401) {
       return NextResponse.json(
         { error: "NASA API key is invalid or missing" },

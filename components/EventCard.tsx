@@ -5,6 +5,8 @@ import Link from "next/link";
 import { NEO } from "@/types/neo";
 import { formatDateTimeForDisplay } from "@/lib/date";
 import EventDetail from "./EventDetail";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface EventCardProps {
   neo: NEO;
@@ -16,6 +18,7 @@ export default function EventCard({ neo }: EventCardProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [loadingOrbitalData, setLoadingOrbitalData] = useState(false);
   const [orbitalData, setOrbitalData] = useState<NEO['orbital_data'] | null>(null);
+  const [orbitalError, setOrbitalError] = useState<string | null>(null);
 
   const handleOpenModal = () => {
     setShowModal(true);
@@ -59,16 +62,26 @@ export default function EventCard({ neo }: EventCardProps) {
     
     try {
       setLoadingOrbitalData(true);
+      setOrbitalError(null); // Reset any previous errors
+      
       const response = await fetch(`/api/neos/${neo.id}?orbital=true`);
       
       if (!response.ok) {
-        throw new Error(`Failed to fetch orbital data: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || response.statusText;
+        throw new Error(`Failed to fetch orbital data: ${errorMessage}`);
       }
       
       const data = await response.json();
+      
+      if (!data.orbital_data) {
+        throw new Error('No orbital data available for this object');
+      }
+      
       setOrbitalData(data.orbital_data);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching orbital data:", err);
+      setOrbitalError(err.message || 'Failed to load orbital data');
     } finally {
       setLoadingOrbitalData(false);
     }
@@ -76,62 +89,64 @@ export default function EventCard({ neo }: EventCardProps) {
 
   return (
     <>
-      <div 
-        className="bg-card border border-border rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+      <Card 
+        className="hover:shadow-md transition-shadow h-full"
         data-testid="event-card"
       >
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="font-medium text-lg truncate" title={neo.name}>
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <CardTitle className="text-lg font-medium truncate" title={neo.name}>
               {neo.name}
-            </h3>
+            </CardTitle>
             {neo.hazardous && (
-              <span className="bg-destructive text-destructive-foreground text-xs px-2 py-0.5 rounded-full">
+              <Badge variant="destructive" className="ml-2">
                 Hazardous
-              </span>
+              </Badge>
             )}
           </div>
-          
+        </CardHeader>
+        
+        <CardContent className="space-y-3 pt-2">
           <div className="space-y-2 text-sm">
-            <p>
-              <span className="text-muted-foreground">Diameter:</span>{" "}
-              {neo.avgDiameterKm ? `${neo.avgDiameterKm.toFixed(2)} km` : "Unknown"}
+            <p className="flex justify-between">
+              <span className="text-muted-foreground">Diameter:</span>
+              <span className="font-medium">{neo.avgDiameterKm ? `${neo.avgDiameterKm.toFixed(2)} km` : "Unknown"}</span>
             </p>
             
-            <p>
-              <span className="text-muted-foreground">Closest Approach:</span>{" "}
-              {neo.nearestApproach?.datetime 
+            <p className="flex justify-between">
+              <span className="text-muted-foreground">Closest Approach:</span>
+              <span className="font-medium">{neo.nearestApproach?.datetime 
                 ? formatDateTimeForDisplay(neo.nearestApproach.datetime) 
-                : "Unknown"}
+                : "Unknown"}</span>
             </p>
             
             {neo.nearestApproach?.missDistanceKm && (
-              <p>
-                <span className="text-muted-foreground">Miss Distance:</span>{" "}
-                {Number(neo.nearestApproach.missDistanceKm).toLocaleString()} km
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Miss Distance:</span>
+                <span className="font-medium">{Number(neo.nearestApproach.missDistanceKm).toLocaleString()} km</span>
               </p>
             )}
           </div>
+        </CardContent>
+        
+        <CardFooter className="flex justify-between pt-2">
+          <button
+            onClick={handleOpenModal}
+            className="text-primary hover:text-primary/80 text-sm font-medium"
+            aria-label={`View details for ${neo.name}`}
+          >
+            View Details
+          </button>
           
-          <div className="mt-4 flex justify-between items-center">
-            <button
-              onClick={handleOpenModal}
-              className="text-primary hover:text-primary/80 text-sm font-medium"
-              aria-label={`View details for ${neo.name}`}
-            >
-              View Details
-            </button>
-            
-            <Link
-              href={`/event/${neo.id}`}
-              className="text-sm text-muted-foreground hover:text-foreground"
-              aria-label={`Open full page for ${neo.name}`}
-            >
-              Full Page
-            </Link>
-          </div>
-        </div>
-      </div>
+          <Link
+            href={`/event/${neo.id}`}
+            className="text-sm text-muted-foreground hover:text-foreground"
+            aria-label={`Open full page for ${neo.name}`}
+          >
+            Full Page
+          </Link>
+        </CardFooter>
+      </Card>
 
       {/* Modal for event details */}
       {showModal && (
@@ -147,7 +162,7 @@ export default function EventCard({ neo }: EventCardProps) {
         >
           <div 
             ref={modalRef}
-            className="bg-white dark:bg-gray-800 p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-background border border-border p-6 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-lg"
           >
             <div className="flex justify-between items-start mb-4">
               <h2 id="modal-title" className="text-xl font-bold">{neo.name}</h2>
@@ -179,6 +194,7 @@ export default function EventCard({ neo }: EventCardProps) {
                 orbitalData={orbitalData}
                 loadingOrbitalData={loadingOrbitalData}
                 onLoadOrbitalData={handleLoadOrbitalData}
+                orbitalError={orbitalError}
               />
             </div>
           </div>
