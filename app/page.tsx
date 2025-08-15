@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import FilterBar from "@/components/FilterBar";
 import EventList from "@/components/EventList";
 import Loading from "@/components/Loading";
@@ -8,7 +8,7 @@ import ErrorState from "@/components/ErrorState";
 import { SortOrder, DayGroup } from "@/types/neo";
 import { useNeoFeed } from "@/hooks/useNeoFeed";
 import { useSearchParams, useRouter } from "next/navigation";
-import { addDays, format } from "date-fns";
+import { addDays, format, differenceInDays } from "date-fns";
 
 export default function Home() {
   const router = useRouter();
@@ -43,13 +43,6 @@ export default function Home() {
     loadMore, 
     isLoadingMore, 
     refetch 
-  }: {
-    data: DayGroup[];
-    isLoading: boolean;
-    error: Error | null;
-    loadMore: (newEndDate: Date) => Promise<void>;
-    isLoadingMore: boolean;
-    refetch: () => Promise<void>;
   } = useNeoFeed({
     startDate,
     endDate,
@@ -78,13 +71,34 @@ export default function Home() {
     setSortOrder(value as SortOrder);
   };
 
+  // Validate date range against NASA API limitations
+  const validateDateRange = useCallback((start: Date, end: Date): boolean => {
+    // Calculate difference in days
+    const daysDiff = differenceInDays(end, start);
+    
+    // NASA API has a 7-day limit
+    return daysDiff >= 0 && daysDiff <= 7;
+  }, []);
+
+  // Handle date range changes
   const handleDateRangeChange = (start: Date, end: Date) => {
-    setStartDate(start);
-    setEndDate(end);
+    // Enforce the 7-day limit
+    if (!validateDateRange(start, end)) {
+      // If range exceeds 7 days, adjust the end date
+      const adjustedEnd = addDays(start, 7);
+      setStartDate(start);
+      setEndDate(adjustedEnd);
+      // Show a notification or alert here if desired
+      alert("Date range limited to 7 days due to NASA API limitations");
+    } else {
+      setStartDate(start);
+      setEndDate(end);
+    }
   };
 
   // Handle load more
   const handleLoadMore = () => {
+    // Load exactly 7 more days to stay within API limits
     const newEndDate = addDays(endDate, 7);
     setEndDate(newEndDate);
     loadMore(newEndDate);
@@ -109,7 +123,9 @@ export default function Home() {
       ) : error ? (
         <ErrorState 
           message={error.message || "Failed to load data"} 
-          onRetry={refetch} 
+          onRetry={refetch}
+          suggestion={error.suggestion}
+          errorType={error.type}
         />
       ) : (
         <>

@@ -1,9 +1,11 @@
 interface ErrorStateProps {
   message: string;
   onRetry?: () => void;
+  suggestion?: string;
+  errorType?: 'api' | 'date' | 'network' | 'general';
 }
 
-export default function ErrorState({ message, onRetry }: ErrorStateProps) {
+export default function ErrorState({ message, onRetry, suggestion, errorType = 'general' }: ErrorStateProps) {
   return (
     <div 
       className="bg-card border border-destructive/20 rounded-lg p-6 text-center"
@@ -29,8 +31,30 @@ export default function ErrorState({ message, onRetry }: ErrorStateProps) {
         </svg>
       </div>
       
-      <h3 className="text-lg font-medium mb-2">Error Loading Data</h3>
-      <p className="text-muted-foreground mb-4">{message}</p>
+      <h3 className="text-lg font-medium mb-2">
+        {errorType === 'api' && "API Error"}
+        {errorType === 'date' && "Date Range Error"}
+        {errorType === 'network' && "Network Error"}
+        {errorType === 'general' && "Error Loading Data"}
+      </h3>
+      <p className="text-muted-foreground mb-2">{message}</p>
+      
+      {suggestion && (
+        <p className="text-sm text-amber-500 mb-4">
+          <strong>Suggestion:</strong> {suggestion}
+        </p>
+      )}
+      
+      {errorType === 'date' && (
+        <div className="text-xs text-muted-foreground mb-4 p-2 bg-muted rounded-md">
+          <p><strong>Note:</strong> NASA API has the following limitations:</p>
+          <ul className="list-disc list-inside mt-1">
+            <li>Maximum date range of 7 days</li>
+            <li>Start date must be before end date</li>
+            <li>Dates must be in valid format (YYYY-MM-DD)</li>
+          </ul>
+        </div>
+      )}
       
       {onRetry && (
         <button

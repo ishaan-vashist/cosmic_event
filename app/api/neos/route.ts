@@ -20,18 +20,28 @@ const QuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if NASA API key is set
+    if (!process.env.NASA_API_KEY) {
+      console.error("NASA_API_KEY is missing in environment variables");
+      return NextResponse.json(
+        { error: "NASA API key is not configured" },
+        { status: 500 }
+      );
+    }
     // Parse and validate query parameters
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("start_date");
     const endDate = searchParams.get("end_date");
-    const hazardous = searchParams.get("hazardous");
-    const sort = searchParams.get("sort") || "approach_asc";
+    // Convert optional params: URLSearchParams.get returns null when absent.
+    // Zod .optional() expects undefined, not null.
+    const hazardousParam = searchParams.get("hazardous") ?? undefined;
+    const sortParam = (searchParams.get("sort") as "approach_asc" | "approach_desc" | null) ?? "approach_asc";
 
     const validationResult = QuerySchema.safeParse({
       start_date: startDate,
       end_date: endDate,
-      hazardous: hazardous,
-      sort: sort,
+      hazardous: hazardousParam,
+      sort: sortParam,
     });
 
     if (!validationResult.success) {
@@ -41,8 +51,37 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Use validated values
+    const { start_date, end_date, hazardous, sort } = validationResult.data;
+    
+    // Validate date range (NASA API limits to 7 days)
+    const startDateObj = new Date(start_date);
+    const endDateObj = new Date(end_date);
+    const daysDiff = Math.floor((endDateObj.getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid date format" },
+        { status: 400 }
+      );
+    }
+    
+    if (daysDiff < 0) {
+      return NextResponse.json(
+        { error: "End date must be after start date" },
+        { status: 400 }
+      );
+    }
+    
+    if (daysDiff > 7) {
+      return NextResponse.json(
+        { error: "Date range cannot exceed 7 days (NASA API limitation)" },
+        { status: 400 }
+      );
+    }
+
     // Generate cache key
-    const cacheKey = `${startDate}|${endDate}|${hazardous}|${sort}`;
+    const cacheKey = `${start_date}|${end_date}|${hazardous ?? ""}|${sort}`;
     
     // Check if we have a valid cached response
     const cachedEntry = cache.get(cacheKey);
@@ -55,7 +94,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch data from NASA API
-    const neoData = await fetchNeoFeed(startDate!, endDate!);
+    const neoData = await fetchNeoFeed(start_date, end_date);
     
     // Normalize the data
     const normalizedData = normalizeNeoData(
@@ -77,7 +116,13 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: unknown) {
+    // Detailed error logging
     console.error("Error fetching NEO data:", error);
+    
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     
     // Handle NASA API specific errors
     const err = error as { status?: number; headers?: { get: (name: string) => string | null }; message?: string };

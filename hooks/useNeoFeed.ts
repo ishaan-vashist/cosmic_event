@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { DayGroup, NeoFeedParams } from "@/types/neo";
+
+interface ApiError {
+  message: string;
+  type: 'api' | 'date' | 'network' | 'general';
+  suggestion?: string;
+}
 
 /**
  * Custom hook for fetching and managing NEO feed data
@@ -16,12 +22,37 @@ export function useNeoFeed({
   const [data, setData] = useState<DayGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
 
   /**
    * Formats dates for API requests
    */
   const formatDate = (date: Date) => format(date, "yyyy-MM-dd");
+
+  /**
+   * Validates date range against NASA API limitations
+   */
+  const validateDateRange = useCallback((start: Date, end: Date): { valid: boolean; reason?: string } => {
+    // Check if dates are valid
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      return { valid: false, reason: "Invalid date format" };
+    }
+    
+    // Check if end date is after start date
+    if (end < start) {
+      return { valid: false, reason: "End date must be after start date" };
+    }
+    
+    // Calculate difference in days
+    const daysDiff = differenceInDays(end, start);
+    
+    // NASA API has a 7-day limit
+    if (daysDiff > 7) {
+      return { valid: false, reason: "Date range exceeds NASA API's 7-day limit" };
+    }
+    
+    return { valid: true };
+  }, []);
 
   /**
    * Fetches NEO data from the API
@@ -30,6 +61,16 @@ export function useNeoFeed({
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Validate date range
+      const validation = validateDateRange(startDate, endDate);
+      if (!validation.valid) {
+        throw {
+          message: validation.reason || "Invalid date range",
+          type: 'date',
+          suggestion: "Try selecting a date range of 7 days or less"
+        } as ApiError;
+      }
 
       const params = new URLSearchParams({
         start_date: formatDate(startDate),
@@ -47,17 +88,63 @@ export function useNeoFeed({
       const response = await fetch(`/api/neos?${params.toString()}`);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch data: ${response.statusText}`);
+        // Try to get more detailed error information
+        let errorMessage = `Failed to fetch data: ${response.statusText}`;
+        let errorType: 'api' | 'date' | 'network' | 'general' = 'api';
+        let suggestion: string | undefined;
+        
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.error) {
+            errorMessage = errorData.error;
+            
+            // Determine error type based on status code or message content
+            if (response.status === 400 && errorMessage.toLowerCase().includes('date')) {
+              errorType = 'date';
+              suggestion = "Check that your date range is valid and doesn't exceed 7 days";
+            } else if (response.status === 500) {
+              errorType = 'api';
+              suggestion = "The NASA API might be experiencing issues. Try again later.";
+            } else if (response.status === 404) {
+              errorType = 'api';
+              suggestion = "The requested resource was not found.";
+            }
+          }
+        } catch (e) {
+          // If we can't parse the error response, use the default message
+          if (response.status === 0 || !navigator.onLine) {
+            errorType = 'network';
+            suggestion = "Check your internet connection and try again.";
+          }
+        }
+        
+        throw {
+          message: errorMessage,
+          type: errorType,
+          suggestion
+        } as ApiError;
       }
 
       const result = await response.json();
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch NEO data"));
+      if (err && typeof err === 'object' && 'type' in err) {
+        setError(err as ApiError);
+      } else if (err instanceof Error) {
+        setError({
+          message: err.message,
+          type: 'general'
+        });
+      } else {
+        setError({
+          message: "Failed to fetch NEO data",
+          type: 'general'
+        });
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [startDate, endDate, hazardousOnly, sortOrder]);
+  }, [startDate, endDate, hazardousOnly, sortOrder, validateDateRange]);
 
   /**
    * Loads more data by extending the date range
@@ -66,9 +153,22 @@ export function useNeoFeed({
     try {
       setIsLoadingMore(true);
       setError(null);
+      
+      // Use current endDate as new startDate
+      const newStartDate = new Date(endDate);
+      
+      // Validate the new date range
+      const validation = validateDateRange(newStartDate, newEndDate);
+      if (!validation.valid) {
+        throw {
+          message: validation.reason || "Invalid date range for loading more data",
+          type: 'date',
+          suggestion: "Try loading smaller chunks of data (7 days or less)"
+        } as ApiError;
+      }
 
       const params = new URLSearchParams({
-        start_date: formatDate(endDate),
+        start_date: formatDate(newStartDate),
         end_date: formatDate(newEndDate),
       });
 
@@ -83,7 +183,38 @@ export function useNeoFeed({
       const response = await fetch(`/api/neos?${params.toString()}`);
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch more data: ${response.statusText}`);
+        // Try to get more detailed error information
+        let errorMessage = `Failed to fetch more data: ${response.statusText}`;
+        let errorType: 'api' | 'date' | 'network' | 'general' = 'api';
+        let suggestion: string | undefined;
+        
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.error) {
+            errorMessage = errorData.error;
+            
+            // Determine error type based on status code or message content
+            if (response.status === 400 && errorMessage.toLowerCase().includes('date')) {
+              errorType = 'date';
+              suggestion = "Check that your date range is valid and doesn't exceed 7 days";
+            } else if (response.status === 500) {
+              errorType = 'api';
+              suggestion = "The NASA API might be experiencing issues. Try again later.";
+            }
+          }
+        } catch (e) {
+          // If we can't parse the error response, use the default message
+          if (response.status === 0 || !navigator.onLine) {
+            errorType = 'network';
+            suggestion = "Check your internet connection and try again.";
+          }
+        }
+        
+        throw {
+          message: errorMessage,
+          type: errorType,
+          suggestion
+        } as ApiError;
       }
 
       const newData = await response.json();
@@ -134,11 +265,23 @@ export function useNeoFeed({
         );
       });
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to load more data"));
+      if (err && typeof err === 'object' && 'type' in err) {
+        setError(err as ApiError);
+      } else if (err instanceof Error) {
+        setError({
+          message: err.message,
+          type: 'general'
+        });
+      } else {
+        setError({
+          message: "Failed to load more data",
+          type: 'general'
+        });
+      }
     } finally {
       setIsLoadingMore(false);
     }
-  }, [endDate, hazardousOnly, sortOrder]);
+  }, [endDate, hazardousOnly, sortOrder, validateDateRange]);
 
   // Initial data fetch
   useEffect(() => {
