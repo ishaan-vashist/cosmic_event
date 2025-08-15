@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { normalizeNeoData } from '@/lib/nasa';
 import { z } from 'zod';
-import { DayGroup } from '@/types/neo';
 
 // Mock NASA API response
 const mockNasaResponse = {

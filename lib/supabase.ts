@@ -142,7 +142,7 @@ export async function isFavorite(neoId: string) {
   const user = await getCurrentUser();
   if (!user) return false;
   
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('neo_favorites')
     .select('neo_id')
     .eq('user_id', user.id)

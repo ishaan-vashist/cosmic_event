@@ -79,9 +79,10 @@ export default function EventCard({ neo }: EventCardProps) {
       }
       
       setOrbitalData(data.orbital_data);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error fetching orbital data:", err);
-      setOrbitalError(err.message || 'Failed to load orbital data');
+      const error = err as Error;
+      setOrbitalError(error.message || 'Failed to load orbital data');
     } finally {
       setLoadingOrbitalData(false);
     }

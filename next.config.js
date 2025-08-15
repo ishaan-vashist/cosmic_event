@@ -13,6 +13,20 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: false,
   },
+  // Configure dynamic routes
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 's-maxage=60, stale-while-revalidate=300',
+          },
+        ],
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig

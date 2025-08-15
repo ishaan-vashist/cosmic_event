@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { addDays, format, differenceInDays } from "date-fns";
 
@@ -14,10 +14,8 @@ import { SortOrder } from "@/types/neo";
 import { useNeoFeed } from "@/hooks/useNeoFeed";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 
-export default function FeedPage() {
-  // Auth guard - redirects to /login if not authenticated
-  const { isLoading: isAuthLoading, isAuthenticated } = useRequireAuth();
-  
+// Client component that safely uses useSearchParams
+function FeedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -41,14 +39,12 @@ export default function FeedPage() {
   const [endDate, setEndDate] = useState(
     endDateParam ? new Date(endDateParam) : addDays(today, 7)
   );
-
+  
   // Fetch NEO data using custom hook
   const { 
     data, 
     isLoading, 
     error, 
-    loadMore, 
-    isLoadingMore, 
     refetch 
   } = useNeoFeed({
     startDate,
@@ -106,14 +102,41 @@ export default function FeedPage() {
       setEndDate(end);
     }
   };
+  
+  return (
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      <h1 className="text-3xl font-bold">Near-Earth Objects Tracker</h1>
+      
+      <FilterBar 
+        hazardousOnly={hazardousOnly}
+        onHazardousChange={handleHazardousChange}
+        sortOrder={sortOrder}
+        onSortChange={handleSortChange}
+        startDate={startDate}
+        endDate={endDate}
+        onDateRangeChange={handleDateRangeChange}
+        onApplyFilters={applyFilters}
+      />
+      
+      {isLoading ? (
+        <Loading />
+      ) : error ? (
+        <ErrorState 
+          message={error.message || "Failed to load data"} 
+          onRetry={refetch}
+          suggestion={error.suggestion}
+          errorType={error.type}
+        />
+      ) : (
+        <EventList dayGroups={data} />
+      )}
+    </div>
+  );
+}
 
-  // Handle load more
-  const handleLoadMore = () => {
-    // Load exactly 7 more days to stay within API limits
-    const newEndDate = addDays(endDate, 7);
-    setEndDate(newEndDate);
-    loadMore(newEndDate);
-  };
+export default function FeedPage() {
+  // Auth guard - redirects to /login if not authenticated
+  const { isLoading: isAuthLoading } = useRequireAuth();
 
   // Show loading state while checking authentication
   if (isAuthLoading) {
@@ -131,33 +154,9 @@ export default function FeedPage() {
   return (
     <>
       <Header />
-      <div className="container mx-auto px-4 py-8 space-y-6">
-        <h1 className="text-3xl font-bold">Near-Earth Objects Tracker</h1>
-        
-        <FilterBar 
-          hazardousOnly={hazardousOnly}
-          onHazardousChange={handleHazardousChange}
-          sortOrder={sortOrder}
-          onSortChange={handleSortChange}
-          startDate={startDate}
-          endDate={endDate}
-          onDateRangeChange={handleDateRangeChange}
-          onApplyFilters={applyFilters}
-        />
-        
-        {isLoading ? (
-          <Loading />
-        ) : error ? (
-          <ErrorState 
-            message={error.message || "Failed to load data"} 
-            onRetry={refetch}
-            suggestion={error.suggestion}
-            errorType={error.type}
-          />
-        ) : (
-          <EventList dayGroups={data} />
-        )}
-      </div>
+      <Suspense fallback={<div className="container mx-auto px-4 py-8"><Loading /></div>}>
+        <FeedContent />
+      </Suspense>
       <Footer />
     </>
   );

@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { addDays, format, isValid, parse } from "date-fns";
+import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 
 interface FilterBarProps {
@@ -32,15 +30,8 @@ export default function FilterBar({
   onDateRangeChange,
   onApplyFilters
 }: FilterBarProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // Parse dates from URL or use defaults
-  const parseDate = (dateString: string | null): Date | undefined => {
-    if (!dateString) return undefined;
-    const parsedDate = parse(dateString, "yyyy-MM-dd", new Date());
-    return isValid(parsedDate) ? parsedDate : undefined;
-  };
+  // Component implementation
 
   // Local state for date warnings
   const [dateWarning, setDateWarning] = useState<string | null>(null);

@@ -4,7 +4,7 @@ import * as React from "react"
 import type {
   ToastActionElement,
   ToastProps,
-} from "@/components/ui/toast"    
+} from "./toast"    
 
 const TOAST_LIMIT = 5
 const TOAST_REMOVE_DELAY = 3000 // 3 seconds is a more reasonable timeout
@@ -30,8 +30,6 @@ function genId() {
   return count.toString()
 }
 
-// Properly type the action types for better type safety
-type ActionType = typeof actionTypes[keyof typeof actionTypes]
 
 type Action =
   | {

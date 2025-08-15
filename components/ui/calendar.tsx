@@ -7,6 +7,8 @@ import { DayPicker } from "react-day-picker"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
+// We'll use a comment to explain the typing situation instead of creating a custom type
+
 export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 function Calendar({
@@ -53,9 +55,12 @@ function Calendar({
         day_hidden: "invisible",
         ...classNames,
       }}
+      // Using 'as any' with ESLint disable comment because react-day-picker types don't match the actual API
+      // This is a known issue with the library where the type definitions don't properly support custom navigation icons
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       components={{
         IconLeft: () => <ChevronLeft className="h-5 w-5" />,
-        IconRight: () => <ChevronRight className="h-5 w-5" />,
+        IconRight: () => <ChevronRight className="h-5 w-5" />
       } as any}
       {...props}
     />

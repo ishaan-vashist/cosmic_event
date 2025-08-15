@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { fetchNeoFeed, normalizeNeoData } from "@/lib/nasa";
 
+// Configure this route as dynamic since it needs to handle query parameters
+export const dynamic = 'force-dynamic';
+
+// Add runtime configuration
+export const runtime = 'nodejs';
+
+// Helper to format date as YYYY-MM-DD
+function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
 // In-memory cache with TTL of 5 minutes
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 type CacheEntry = {
@@ -28,14 +39,21 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-    // Parse and validate query parameters
-    const { searchParams } = new URL(request.url);
-    const startDate = searchParams.get("start_date");
-    const endDate = searchParams.get("end_date");
-    // Convert optional params: URLSearchParams.get returns null when absent.
-    // Zod .optional() expects undefined, not null.
-    const hazardousParam = searchParams.get("hazardous") ?? undefined;
-    const sortParam = (searchParams.get("sort") as "approach_asc" | "approach_desc" | "size_asc" | "size_desc" | null) ?? "approach_asc";
+    
+    // Get default dates
+    const today = new Date();
+    const defaultStartDate = formatDate(today);
+    
+    const weekLater = new Date(today);
+    weekLater.setDate(today.getDate() + 7);
+    const defaultEndDate = formatDate(weekLater);
+    
+    // Extract parameters from URL or use defaults
+    const url = new URL(request.url);
+    const startDate = url.searchParams.get("start_date") || defaultStartDate;
+    const endDate = url.searchParams.get("end_date") || defaultEndDate;
+    const hazardousParam = url.searchParams.get("hazardous") ?? undefined;
+    const sortParam = (url.searchParams.get("sort") as "approach_asc" | "approach_desc" | "size_asc" | "size_desc" | null) ?? "approach_asc";
 
     const validationResult = QuerySchema.safeParse({
       start_date: startDate,

@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { fetchNeoDetail } from "@/lib/nasa";
 
+// Configure this route as dynamic since it needs to handle dynamic parameters
+export const dynamic = 'force-dynamic';
+
+// Add runtime configuration
+export const runtime = 'nodejs';
+
 // In-memory cache with TTL of 5 minutes
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
 type CacheEntry = {

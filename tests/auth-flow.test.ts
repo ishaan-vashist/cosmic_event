@@ -58,10 +58,21 @@ describe('Auth Flow Tests', () => {
     vi.mocked(supabase.auth.getSession).mockResolvedValue({
       data: { 
         session: { 
-          user: { id: 'test-user-id' },
+          user: { 
+            id: 'test-user-id',
+            app_metadata: {},
+            user_metadata: {},
+            aud: 'authenticated',
+            created_at: '2023-01-01T00:00:00.000Z',
+            email: 'test@example.com',
+            role: 'authenticated',
+            updated_at: '2023-01-01T00:00:00.000Z'
+          },
           access_token: 'test-token',
           refresh_token: 'test-refresh-token',
-          expires_at: 999999999
+          expires_at: 999999999,
+          expires_in: 3600,
+          token_type: 'bearer'
         } 
       },
       error: null

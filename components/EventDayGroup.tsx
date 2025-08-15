@@ -1,4 +1,3 @@
-import { DayGroup } from "@/types/neo";
 import { NEO } from "@/types/neo";
 import { formatDateForDisplay } from "@/lib/date";
 import EventCard from "./EventCard";
