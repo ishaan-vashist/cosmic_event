@@ -2,7 +2,7 @@
 
 A production-quality Next.js 14 application that tracks and displays NASA Near-Earth Objects (NEOs) with a modern, responsive UI featuring a beautiful space-themed design.
 
-![Cosmic Event Tracker](https://via.placeholder.com/800x400?text=Cosmic+Event+Tracker+Space+Theme)
+![Cosmic Event Tracker](https://cosmic-event.vercel.app/)
 
 ## Features
 
